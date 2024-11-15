@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>TenoxUI Playground</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tenoxui/core@1.3.0-alpha.2/dist/tenoxui.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@nousantx/list-attribute@0.1.0/dist/index.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tenoxui/property@1.4.5"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body --font="Inter" family="$font" display="flex" flex-direction="column">
+    <div class="preview-section">
+      <h1 class="fs-2rem fw-500 ls--0.030em">TenoxUI Playground</h1>
+      <p class="mb-2.5rem fw-500 fs-14px ls--0.020em">(Serverless & Realtime)</p>
+      <div id="preview"></div>
+    </div>
+
+    <div class="editor-section">
+      <h2>Editor</h2>
+      <textarea id="htmlEditor">
+<!-- regular class names -->
+
+<div class="[--color]-#ccf654 box-130px bg-$color hover:bg-#888 radius-1rem [transition]-300ms"></div>
+
+<!-- attributify mode -->
+
+<div
+  --color="#ccf654"
+  bg="$color hover:#888"
+  box="130px"
+  radius="1rem"
+  transition="300ms"
+></div>
+</textarea
+      >
+
+      <h2>Configuration</h2>
+      <textarea id="configEditor">
+{
+  "property": {
+    "bg": "background",
+    "text": "color",
+    "p": "padding",
+    "radius": "borderRadius",
+    "box": ["width", "height"]
+  },
+  "values": {
+    "full": "100%",
+    "red-500": "blue"
+  },
+  "classes": {
+    "display": {
+      "center": "flex"
+    },
+    "justifyContent": {
+      "center": "center"
+    },
+    "alignItems": {
+      "center": "center"
+    }
+  },
+  "attributify": true,
+  "attributifyPrefix": "tui-",
+  "attributifyIgnore": []
+}
+</textarea
+      >
+    </div>
+
+    <script>
+      document.body.setAttribute(
+        'child',
+        `
+(h1): fs-2.5rem fw-600 ls--0.030em;
+(h2): fs-1.75rem fw-500 ls--0.025em;
+(.editor-section): p-1rem;
+(textarea): family-[JetBrains_Mono] w-full h-300px mb-1rem;
+(.preview-section #preview): h-mn-150px p-1rem bg-#77777730;
+`
+      )
+
+      // console.log(ExtendedTenoxUI)
+      // the initial styler,
+      // radiusowser ready
+      // document.querySelectorAll('*:not(#preview *)').forEach(element => {
+      document.querySelectorAll('*').forEach((element) => {
+        const instance = new __tenoxui_core.MakeTenoxUI({
+          element,
+          property: TENOXUI_PROPERTY.property,
+          values: { full: '100%' },
+          attributify: true,
+          attributifyPrefix: 'tx-',
+          attributifyIgnore: __attr_list.standardAttributes
+        }).useDOM()
+      })
+      // Create a global instance store
+      const tuiInstances = new Map()
+
+      // Debounce function to limit the rate of function calls
+      function debounce(func, wait) {
+        let timeout
+        return function executedFunction(...args) {
+          const later = () => {
+            clearTimeout(timeout)
+            func(...args)
+          }
+          clearTimeout(timeout)
+          timeout = setTimeout(later, wait)
+        }
+      }
+
+      // Function to initialize TenoxUI instances for all elements
+      function initializeTenoxUI(config) {
+        tuiInstances.clear()
+        // Only select the preview wrapper
+        document.querySelectorAll('#preview *').forEach((element) => {
+          const instance = new __tenoxui_core.MakeTenoxUI({
+            element,
+            ...config
+          }).useDOM()
+          tuiInstances.set(element, instance)
+        })
+      }
+
+      // Function to update preview
+      function updatePreview() {
+        const htmlContent = document.getElementById('htmlEditor').value
+        const configContent = document.getElementById('configEditor').value
+        // const elementContent = document.getElementById('elementEditor').value
+
+        document.getElementById('preview').innerHTML = htmlContent
+
+        try {
+          const config = JSON.parse(configContent)
+          // Ignore standard html attributes
+          config.attributifyIgnore = __attr_list.standardAttributes
+          initializeTenoxUI(config)
+        } catch (error) {
+          console.error('Error parsing configuration:', error)
+        }
+      }
+
+      // Debounced update function
+      const debouncedUpdate = debounce(updatePreview, 0)
+      document.getElementById('htmlEditor').addEventListener('input', debouncedUpdate)
+      document.getElementById('configEditor').addEventListener('input', debouncedUpdate)
+
+      // Run initial preview
+      updatePreview()
+    </script>
+  </body>
+</html>
